@@ -41,12 +41,20 @@ class Component(ApplicationSession):
     @inlineCallbacks
     def onJoin(self, details):
         print("session attached")
-        counter = 0
+        created = False
+        addr = u'00:16:3e:02:a0:09'
         while True:
-            print('backend publishing com.myapp.topic1', counter)
-            self.publish(u'com.myapp.topic1', counter)
-            counter += 1
-            yield sleep(1)
+            if not created:
+                print('backend publishing com.myapp.topic1', addr)
+                self.publish(u'com.myapp.topic1', addr)
+                created = True
+                yield sleep(10)
+            else:
+                addr = u'ff:ff:ff:ff:ff:ff'
+                print('backend publishing com.myapp.topic1', addr)
+                self.publish(u'com.myapp.topic1', addr)
+                yield self.leave()
+                break
 
 
 if __name__ == '__main__':

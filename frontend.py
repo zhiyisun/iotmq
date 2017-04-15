@@ -32,6 +32,9 @@ from twisted.internet.defer import inlineCallbacks
 
 from autobahn.twisted.wamp import ApplicationSession, ApplicationRunner
 
+import socket
+import fcntl
+import struct
 
 class Component(ApplicationSession):
     """
@@ -46,9 +49,17 @@ class Component(ApplicationSession):
         sub = yield self.subscribe(self.on_event, u'com.myapp.topic1')
         print("Subscribed to com.myapp.topic1 with {}".format(sub.id))
 
+    def getMacAddr(self, ifname):
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        info = fcntl.ioctl(s.fileno(), 0x8927,  struct.pack('256s', ifname[:15]))
+        return ''.join(['%02x:' % ord(char) for char in info[18:24]])[:-1]
+
     def on_event(self, i):
         print("Got event: {}".format(i))
-        self.received += 1
+        if i == self.getMacAddr("eth0"):
+            print("Create ssh")
+        else:
+            print("Tear down")
         # self.config.extra for configuration, etc. (see [A])
         if self.received > self.config.extra['max_events']:
             print("Received enough events; disconnecting.")
