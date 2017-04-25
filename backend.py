@@ -31,7 +31,10 @@ from twisted.internet.defer import inlineCallbacks
 
 from autobahn.twisted.util import sleep
 from autobahn.twisted.wamp import ApplicationSession, ApplicationRunner
+import json
 
+SN=u'00000000db9b14e3'
+PORT=u'12345'
 
 class Component(ApplicationSession):
     """
@@ -42,24 +45,27 @@ class Component(ApplicationSession):
     def onJoin(self, details):
         print("session attached")
         created = False
-        addr = u'00:16:3e:02:a0:09'
+        data = {}
+        data['sn'] = SN
+        data['port'] = PORT
+
         while True:
             if not created:
-                print('backend publishing com.myapp.topic1', addr)
-                self.publish(u'com.myapp.topic1', addr)
+                print('backend publishing com.myapp.topic1', json.dumps(data))
+                self.publish(u'com.myapp.topic1', json.dumps(data))
                 created = True
                 yield sleep(10)
             else:
-                addr = u'ff:ff:ff:ff:ff:ff'
-                print('backend publishing com.myapp.topic1', addr)
-                self.publish(u'com.myapp.topic1', addr)
+                data['sn'] = u'0000000000000000'
+                print('backend publishing com.myapp.topic1', json.dumps(data))
+                self.publish(u'com.myapp.topic1', json.dumps(data))
                 yield self.leave()
                 break
 
 
 if __name__ == '__main__':
     runner = ApplicationRunner(
-        environ.get("AUTOBAHN_DEMO_ROUTER", u"ws://127.0.0.1:8080/ws"),
+        environ.get("AUTOBAHN_DEMO_ROUTER", u"ws://127.0.0.1:5003/ws"),
         u"iotmq",
     )
     runner.run(Component)
